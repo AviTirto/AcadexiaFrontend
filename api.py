@@ -54,7 +54,9 @@ async def fetch_slides_metadata(query: str):
             "http://104.131.190.193:8000/search_slides",
             params={"query": query},
         ) as response:
-            return await response.json()
+            res = await response.json()
+            print(res)
+            return res
 
 def get_cloudfareR2():
     """Returns an S3-compatible client for Cloudflare R2."""

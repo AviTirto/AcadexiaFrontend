@@ -80,20 +80,20 @@ async def main():
                     st.session_state.ppts, st.session_state.ppt_titles, st.session_state.page_nums_list, st.session_state.ppt_explanations_list = response
                 except Exception as e:
                     st.error(f"An error occurred: {e}")
+        
+        # Initialize page_selection if not in session state
+        if 'page_selection' not in st.session_state:
+            st.session_state.page_selection = {}
 
-        # Create a key in session state for selecting slides if it doesn't exist
-        if 'selected_slides' not in st.session_state:
-            st.session_state.selected_slides = {}
-
-        # Define callback function to handle slide selection
-        def on_slide_select(idx, page_idx):
-            page_num = st.session_state.page_nums_list[idx][page_idx]
-            explanation = st.session_state.ppt_explanations_list[idx][page_idx]
-            st.session_state.current_page[idx] = page_num
-            st.session_state.current_explanation[idx] = explanation
-            st.session_state.open_expander = idx
-            # Force rerun to apply changes (using current method)
-            st.rerun()
+        # Define callback function that uses radio buttons for selection
+        def handle_page_change(idx):
+            # Get the selected page index from the radio value
+            if st.session_state.page_selection.get(idx) is not None:
+                page_idx = st.session_state.page_nums_list[idx].index(st.session_state.page_selection[idx])
+                # Update the current page and explanation
+                st.session_state.current_page[idx] = st.session_state.page_selection[idx]
+                st.session_state.current_explanation[idx] = st.session_state.ppt_explanations_list[idx][page_idx]
+                st.session_state.open_expander = idx
 
         if st.session_state.ppts:
             st.success(f"Found {len(st.session_state.ppts)} slides!")
@@ -105,30 +105,42 @@ async def main():
                     st.write(current_explanation)
                     st.divider()
                     
-                    # Add the buttons for slide navigation
+                    # Get current page number for this PowerPoint
+                    if idx not in st.session_state.current_page:
+                        st.session_state.current_page[idx] = st.session_state.page_nums_list[idx][0]
+                    
+                    current_page = st.session_state.current_page[idx]
+                    
+                    # Add the slide navigation using radio buttons instead of regular buttons
                     st.write("*More Slides*")
                     
-                    # Use a flexible button layout
-                    cols = st.columns(min(5, len(st.session_state.page_nums_list[idx])))
-                    for page_idx, page_num in enumerate(st.session_state.page_nums_list[idx]):
-                        # Create a unique key for each button
-                        button_key = f"slide_{idx}{page_num}{st.session_state.slides_query}"
-                        
-                        # Use modulo to wrap columns
-                        col_index = page_idx % len(cols)
-                        if cols[col_index].button(f"Slide {page_num}", key=button_key):
-                            on_slide_select(idx, page_idx)
+                    # Create a radio button group for slide selection
+                    # This ensures only one slide is selected at a time and maintains state
+                    st.session_state.page_selection[idx] = st.radio(
+                        label="Select a slide:",
+                        options=st.session_state.page_nums_list[idx],
+                        index=st.session_state.page_nums_list[idx].index(current_page),
+                        key=f"radio_{idx}_{st.session_state.slides_query}",
+                        label_visibility="collapsed",
+                        horizontal=True,
+                        on_change=handle_page_change,
+                        args=(idx,)
+                    )
                     
                     st.write("")  # Add space after buttons
                     
-                    # Get current page number for this PowerPoint
-                    current_page = st.session_state.current_page.get(idx, st.session_state.page_nums_list[idx][0])
-                    
-                    # Display the PDF with the correct page number
-                    st.markdown(f"""
-                        <embed src="data:application/pdf;base64,{ppt}#page={int((current_page + 1)/2)}" 
-                            width="650" height="900" type="application/pdf">
-                    """, unsafe_allow_html=True)
+                    # Display the PDF with the current page
+                    try:
+                        # Calculate the actual PDF page number (your custom formula)
+                        page_to_show = max(1, int((current_page + 1)/2))
+                        
+                        # Display the PDF
+                        st.markdown(f"""
+                            <embed src="data:application/pdf;base64,{ppt}#page={page_to_show}" 
+                                width="700" height="900" type="application/pdf">
+                        """, unsafe_allow_html=True)
+                    except Exception as e:
+                        st.error(f"Error displaying PDF: {e}")
 
 if __name__ == "__main__":
     asyncio.run(main())
