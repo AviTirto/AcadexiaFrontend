@@ -78,26 +78,47 @@ async def main():
                 except Exception as e:
                     st.error(f"An error occurred: {e}")
 
+        def update_slide(idx, page_idx):
+            page_num = st.session_state.page_nums_list[idx][page_idx]
+            explanation = st.session_state.ppt_explanations_list[idx][page_idx]
+            st.session_state.current_page[idx] = page_num
+            st.session_state.current_explanation[idx] = explanation
+            st.session_state.open_expander = idx
+
         if st.session_state.ppts:
             st.success(f"Found {len(st.session_state.ppts)} slides!")
             for idx, ppt in enumerate(st.session_state.ppts):
                 is_open = st.session_state.open_expander == idx
                 with st.expander(st.session_state.ppt_titles[idx], expanded=is_open):
-                    current_explanation = st.session_state.current_explanation.get(idx, st.session_state.ppt_explanations_list[idx][0])
-                    st.write(current_explanation)
-                    st.divider()
-                    st.write("**More Slides**")
-                    for page_num, explanation in zip(st.session_state.page_nums_list[idx], st.session_state.ppt_explanations_list[idx]):
-                        if st.button(f"Slide {page_num}", key=f"slide_{idx}_{page_num}"):
-                            st.session_state.current_page[idx] = page_num
-                            st.session_state.current_explanation[idx] = explanation
-                            st.session_state.open_expander = idx
+                    explanation_container = st.container()
+                    buttons_container = st.container()
+                    pdf_container = st.container()
 
-                    current_page = st.session_state.current_page.get(idx, st.session_state.page_nums_list[idx][0])
-                    st.markdown(f"""
-                        <embed src="data:application/pdf;base64,{ppt}#page={current_page}" 
+                    with explanation_container:
+                        current_explanation = st.session_state.current_explanation.get(idx, st.session_state.ppt_explanations_list[idx][0])
+                        st.write(current_explanation)
+                        st.divider()
+
+                    with buttons_container:
+                        st.write("**More Slides**")
+
+                        button_html = """
+                        <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
+                        """
+
+                        for page_idx, page_num in enumerate(st.session_state.page_nums_list[idx]):
+                            button_key = f"slide_{idx}_{page_num}_{st.session_state.slides_query}"
+                            if st.button(f"Slide {page_num}", key=button_key):
+                                update_slide(idx, page_idx)
+
+                        st.write("")
+
+                    with pdf_container:
+                        current_page = st.session_state.current_page.get(idx, st.session_state.page_nums_list[idx][0])
+                        st.markdown(f"""
+                        <embed src="data:application/pdf;base64,{ppt}#page={int((current_page + 1)/2)}" 
                                width="700" height="900" type="application/pdf">
-                    """, unsafe_allow_html=True)
+                        """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     asyncio.run(main())
