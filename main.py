@@ -70,6 +70,9 @@ async def main():
 
         if slides_search_bar and slides_search_bar != st.session_state.slides_query:
             st.session_state.slides_query = slides_search_bar
+            # Reset current values when search changes
+            st.session_state.current_page = {}
+            st.session_state.current_explanation = {}
 
             with st.spinner("Searching for slides..."):
                 try:
@@ -78,47 +81,54 @@ async def main():
                 except Exception as e:
                     st.error(f"An error occurred: {e}")
 
-        def update_slide(idx, page_idx):
+        # Create a key in session state for selecting slides if it doesn't exist
+        if 'selected_slides' not in st.session_state:
+            st.session_state.selected_slides = {}
+
+        # Define callback function to handle slide selection
+        def on_slide_select(idx, page_idx):
             page_num = st.session_state.page_nums_list[idx][page_idx]
             explanation = st.session_state.ppt_explanations_list[idx][page_idx]
             st.session_state.current_page[idx] = page_num
             st.session_state.current_explanation[idx] = explanation
             st.session_state.open_expander = idx
+            # Force rerun to apply changes (using current method)
+            st.rerun()
 
         if st.session_state.ppts:
             st.success(f"Found {len(st.session_state.ppts)} slides!")
             for idx, ppt in enumerate(st.session_state.ppts):
                 is_open = st.session_state.open_expander == idx
                 with st.expander(st.session_state.ppt_titles[idx], expanded=is_open):
-                    explanation_container = st.container()
-                    buttons_container = st.container()
-                    pdf_container = st.container()
-
-                    with explanation_container:
-                        current_explanation = st.session_state.current_explanation.get(idx, st.session_state.ppt_explanations_list[idx][0])
-                        st.write(current_explanation)
-                        st.divider()
-
-                    with buttons_container:
-                        st.write("**More Slides**")
-
-                        button_html = """
-                        <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
-                        """
-
-                        for page_idx, page_num in enumerate(st.session_state.page_nums_list[idx]):
-                            button_key = f"slide_{idx}_{page_num}_{st.session_state.slides_query}"
-                            if st.button(f"Slide {page_num}", key=button_key):
-                                update_slide(idx, page_idx)
-
-                        st.write("")
-
-                    with pdf_container:
-                        current_page = st.session_state.current_page.get(idx, st.session_state.page_nums_list[idx][0])
-                        st.markdown(f"""
+                    # Show the explanation
+                    current_explanation = st.session_state.current_explanation.get(idx, st.session_state.ppt_explanations_list[idx][0])
+                    st.write(current_explanation)
+                    st.divider()
+                    
+                    # Add the buttons for slide navigation
+                    st.write("*More Slides*")
+                    
+                    # Use a flexible button layout
+                    cols = st.columns(min(5, len(st.session_state.page_nums_list[idx])))
+                    for page_idx, page_num in enumerate(st.session_state.page_nums_list[idx]):
+                        # Create a unique key for each button
+                        button_key = f"slide_{idx}{page_num}{st.session_state.slides_query}"
+                        
+                        # Use modulo to wrap columns
+                        col_index = page_idx % len(cols)
+                        if cols[col_index].button(f"Slide {page_num}", key=button_key):
+                            on_slide_select(idx, page_idx)
+                    
+                    st.write("")  # Add space after buttons
+                    
+                    # Get current page number for this PowerPoint
+                    current_page = st.session_state.current_page.get(idx, st.session_state.page_nums_list[idx][0])
+                    
+                    # Display the PDF with the correct page number
+                    st.markdown(f"""
                         <embed src="data:application/pdf;base64,{ppt}#page={int((current_page + 1)/2)}" 
-                               width="700" height="900" type="application/pdf">
-                        """, unsafe_allow_html=True)
+                            width="650" height="900" type="application/pdf">
+                    """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     asyncio.run(main())
