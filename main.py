@@ -87,12 +87,12 @@ async def main():
 
         # Define callback function that uses radio buttons for selection
         def handle_page_change(idx):
-            # Get the selected page index from the radio value
             if st.session_state.page_selection.get(idx) is not None:
                 page_idx = st.session_state.page_nums_list[idx].index(st.session_state.page_selection[idx])
-                # Update the current page and explanation
                 st.session_state.current_page[idx] = st.session_state.page_selection[idx]
                 st.session_state.current_explanation[idx] = st.session_state.ppt_explanations_list[idx][page_idx]
+                
+                # Ensure the correct expander stays open
                 st.session_state.open_expander = idx
 
         if st.session_state.ppts:
