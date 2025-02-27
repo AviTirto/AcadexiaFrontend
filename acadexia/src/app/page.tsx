@@ -1,5 +1,4 @@
 import { Box } from "@chakra-ui/react";
-import Image from "next/image";
 import SearchTabs from "./components/SearchTabs";
 
 export default function Home() {

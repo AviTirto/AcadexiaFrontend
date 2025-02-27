@@ -1,36 +1,41 @@
 "use client";
 
-import LectureSearch from "@/app/components/LectureSearchTab";
-import PowerPointSearch from "@/app/components/PPTSearchTab";
-import { Box, Flex, Tabs } from "@chakra-ui/react"
+import { Box, Flex, Tabs } from "@chakra-ui/react";
+import LectureSearchTab from "@/app/components/LectureSearchTab";
+import PPTSearchTab from "@/app/components/PPTSearchTab";
+import React from "react"; // Import React for typing
 
-const items = [
+interface TabItem {
+  title: string;
+  component: React.ReactNode; // More flexible than JSX.Element
+}
+
+const items: TabItem[] = [
   {
-    title: "1",
-    content: "Dolore ex esse laboris elit magna esse sunt",
+    title: "Lecture Search",
+    component: <LectureSearchTab />,
   },
   {
-    title: "2",
-    content:
-      "Pariatur in veniam Lorem est occaecat do magna nisi mollit ipsum sit adipisicing fugiat ex.",
+    title: "PowerPoint Search",
+    component: <PPTSearchTab />,
   },
-]
+];
 
-const SearchTabs = () => {
+const SearchTabs: React.FC = () => {
   return (
     <Flex minH="dvh">
-      <Tabs.Root defaultValue="1" width="full" variant="line">
+      <Tabs.Root defaultValue="Lecture Search" width="full" variant="line">
         <Tabs.List>
-          {items.map((item, index) => (
-            <Tabs.Trigger key={index} value={item.title}>
-              Tab {item.title}
+          {items.map((item) => (
+            <Tabs.Trigger key={item.title} value={item.title}>
+              {item.title}
             </Tabs.Trigger>
           ))}
         </Tabs.List>
         <Box pos="relative" minH="200px" width="full">
-          {items.map((item, index) => (
+          {items.map((item) => (
             <Tabs.Content
-              key={index}
+              key={item.title}
               value={item.title}
               position="absolute"
               inset="0"
@@ -43,13 +48,13 @@ const SearchTabs = () => {
                 animationDuration: "120ms",
               }}
             >
-              {item.content}
+              {item.component}
             </Tabs.Content>
           ))}
         </Box>
       </Tabs.Root>
     </Flex>
-  )
-}
+  );
+};
 
-export default SearchTabs
+export default SearchTabs;

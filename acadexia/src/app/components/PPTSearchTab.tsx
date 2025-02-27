@@ -1,3 +1,5 @@
+"use client";
+
 import { Input } from "@chakra-ui/react";
 import { useState } from "react";
 
@@ -9,6 +11,7 @@ export default function PowerPointSearch() {
       placeholder="Search PowerPoints..."
       value={searchTerm}
       onChange={(e) => setSearchTerm(e.target.value)}
+      variant="subtle"
     />
   );
 }
