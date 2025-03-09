@@ -1,0 +1,5 @@
+aiohttp
+dotenv
+boto3
+streamlit
+asynci
