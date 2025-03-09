@@ -1,6 +1,6 @@
 import streamlit as st
 import asyncio
-from api import fetch_clips  # Assuming a function to send feedback to the backend
+from api import fetch_clips #send_feedback  # Assuming a function to send feedback to the backend
 
 st.set_page_config(page_title="Econ 301 Search", page_icon="📚")  # Set tab title and icon
 
@@ -37,7 +37,7 @@ async def main():
                 for clip in clips:
                     with st.expander(f"{clip['start_time']} - {clip['end_time']}"):
                         st.markdown(f"""
-                            <div style="text-align: center;">
+                            <div style="text-align: center; margin-bottom: 10px;">
                                 {clip['embed_link']}
                             </div>
                         """, unsafe_allow_html=True)
@@ -45,22 +45,22 @@ async def main():
                         st.subheader('Explanation')
                         st.write(clip['explanation'])
 
-                        # Adding thumbs up and thumbs down buttons for feedback
-                        thumbs_up = st.button("👍", key=f"thumbs_up_{clip['start_time']}")
-                        thumbs_down = st.button("👎", key=f"thumbs_down_{clip['start_time']}")
+                        # Adding radio buttons for feedback
+                        feedback = st.radio(
+                            "How did you find this clip?",
+                            options=["👍", "👎"],
+                            key=f"feedback_{clip['start_time']}",
+                            help="Select thumbs up or down to give your feedback!"
+                        )
 
-                        # Collect feedback and send to backend
-                        if thumbs_up:
-                            feedback = "thumbs_up"
-                            st.write("Thank you for your feedback!")
+                        if feedback == "👍":
+                            st.success("Thank you for your feedback! 👍")
                             # Send feedback to backend
-                            #await send_feedback(clip['start_time'], feedback)
-
-                        if thumbs_down:
-                            feedback = "thumbs_down"
-                            st.write("Thank you for your feedback!")
+                            #await send_feedback(clip['start_time'], "thumbs_up")
+                        elif feedback == "👎":
+                            st.success("Thank you for your feedback! 👍")
                             # Send feedback to backend
-                            #await send_feedback(clip['start_time'], feedback)
+                            #await send_feedback(clip['start_time'], "thumbs_down")
 
             else:
                 st.warning("No clips found for your query.")
