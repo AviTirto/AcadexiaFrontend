@@ -1,6 +1,6 @@
 import streamlit as st
 import asyncio
-from api import fetch_clips, send_feedback  # Assuming a function to send feedback to the backend
+from api import fetch_clips  # Assuming a function to send feedback to the backend
 
 st.set_page_config(page_title="Econ 301 Search", page_icon="📚")  # Set tab title and icon
 
